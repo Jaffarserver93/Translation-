@@ -1,0 +1,7 @@
+# File: netlify.toml
+[build]
+  command = "npm run build"
+  publish = "build"
+
+[functions]
+  directory = "netlify/functions"
