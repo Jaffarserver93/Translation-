@@ -11,6 +11,7 @@ const App = () => {
   const [targetLang, setTargetLang] = useState('hi');
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
+  const [error, setError] = useState('');
 
   const languages = [
     { value: 'en', label: 'English' },
@@ -21,19 +22,40 @@ const App = () => {
   ];
 
   const handleTranslate = async () => {
-    if (!inputText) return;
+    if (!inputText) {
+      setError('Please enter text to translate.');
+      return;
+    }
+
     setIsTranslating(true);
+    setError('');
+
+    // Mock translation fallback for testing
+    const mockTranslation = () => {
+      const translations = {
+        en: inputText,
+        hi: `Translated to Hindi: ${inputText}`,
+        te: `Translated to Telugu: ${inputText}`,
+        ta: `Translated to Tamil: ${inputText}`,
+        hinglish: `Hinglish vibe: ${inputText} bhai!`,
+      };
+      return translations[targetLang] || `Translated to ${targetLang}: ${inputText}`;
+    };
 
     try {
-      // OpenAI API call
+      const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error('OpenAI API key is missing. Please set VITE_OPENAI_API_KEY in .env.');
+      }
+
       const response = await axios.post(
         'https://api.openai.com/v1/chat/completions',
         {
-          model: 'gpt-4',
+          model: 'gpt-3.5-turbo',
           messages: [
             {
               role: 'system',
-              content: `You are a translation assistant specializing in Indian languages and Hinglish. Translate the input text from ${sourceLang} to ${targetLang} with natural, context-aware phrasing suitable for Indian users.`,
+              content: `You are a translation assistant specializing in Indian languages and Hinglish. Translate the input text from ${sourceLang} to ${targetLang} with natural, context-aware phrasing suitable for Indian users. For Hinglish, use casual, urban Indian slang where appropriate.`,
             },
             { role: 'user', content: inputText },
           ],
@@ -41,7 +63,7 @@ const App = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_OPENAI_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
         }
@@ -51,7 +73,19 @@ const App = () => {
       setOutputText(translatedText);
     } catch (error) {
       console.error('Translation error:', error);
-      setOutputText('Error translating. Please try again.');
+      if (error.response) {
+        if (error.response.status === 401) {
+          setError('Invalid OpenAI API key. Please check your VITE_OPENAI_API_KEY.');
+        } else if (error.response.status === 429) {
+          setError('Rate limit exceeded. Please try again later.');
+        } else {
+          setError('Failed to connect to OpenAI. Using mock translation.');
+          setOutputText(mockTranslation());
+        }
+      } else {
+        setError(error.message || 'Something went wrong. Using mock translation.');
+        setOutputText(mockTranslation());
+      }
     } finally {
       setIsTranslating(false);
     }
@@ -63,8 +97,10 @@ const App = () => {
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(outputText);
-    alert('Translation copied to clipboard! 😎');
+    if (outputText) {
+      navigator.clipboard.writeText(outputText);
+      alert('Translation copied to clipboard! 😎');
+    }
   };
 
   return (
@@ -101,6 +137,15 @@ const App = () => {
         >
           Experience AI-powered translations for Hinglish, Hyderabadi English, and more with OpenAI! 🚀
         </motion.p>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="mb-4 p-3 bg-red-500/20 text-red-200 rounded-md text-center"
+          >
+            {error}
+          </motion.div>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <motion.div
             initial={{ x: -50, opacity: 0 }}
