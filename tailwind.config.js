@@ -1,14 +1,10 @@
-/** @type {import('tailwindcss').Config} */
-export default {
-  content: ['./src/**/*.{js,jsx,ts,tsx}'],
-  darkMode: 'class',
+module.exports = {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}"
+  ],
   theme: {
-    extend: {
-      colors: {
-        'desi-gold': '#FFD700',
-        'desi-blue': '#1E3A8A',
-      },
-    },
+    extend: {},
   },
   plugins: [],
 };
