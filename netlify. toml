@@ -1,4 +1,4 @@
-[build]
+[[build]]
   command = "npm run build"
   publish = "dist"
 
@@ -6,3 +6,7 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# #update this line 👇
+[build.environment]
+  VITE_OPENAI_API_KEY = "sk-svcacct-A-srkIoPvIdWDjYFZ3I8LwOZV-bwN4sp8lHqrVZwwgzT3BlbkFJUkEuN0I1EsmDG8JaIfdQ-c2IUPOjnMkzvz27YDbrAAA"
